@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RecruitIQ v2 — Create Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/auth.css"/>
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="bg-glow"></div>
+
+  <button class="theme-btn" id="themeBtn" title="Toggle theme">
+    <span class="th-icon th-sun">☀️</span>
+    <span class="th-icon th-moon">🌙</span>
+  </button>
+
+  <div class="auth-page">
+    <div class="auth-card">
+
+      <div class="auth-logo">
+        <div class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/>
+          </svg>
+        </div>
+        <span>RecruitIQ <em>v2</em></span>
+      </div>
+
+      <h1 class="auth-title">Create account</h1>
+      <p class="auth-subtitle">Start screening resumes intelligently</p>
+
+      <div class="auth-alert" id="authAlert" style="display:none">
+        <span>⚠</span>
+        <span id="alertMsg"></span>
+      </div>
+      <div class="auth-success" id="authSuccess" style="display:none">
+        <span>✓</span>
+        <span id="successMsg"></span>
+      </div>
+
+      <div class="auth-form">
+        <div class="field-group">
+          <label class="field-label">Username</label>
+          <input class="field-input" id="username" type="text"
+                 placeholder="Choose a username (min 3 chars)" autocomplete="username"/>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email</label>
+          <input class="field-input" id="email" type="email"
+                 placeholder="your@email.com" autocomplete="email"/>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Password</label>
+          <div class="pw-field">
+            <input class="field-input" id="password" type="password"
+                   placeholder="Min. 6 characters" autocomplete="new-password"/>
+            <button class="pw-toggle" id="pwToggle" type="button">
+              <span class="eye-show">👁</span>
+              <span class="eye-hide" style="display:none">🙈</span>
+            </button>
+          </div>
+          <!-- Password strength -->
+          <div class="pw-strength">
+            <div class="pw-strength-bar" id="pwBar"></div>
+          </div>
+          <span class="pw-strength-label" id="pwLabel"></span>
+        </div>
+
+        <button class="auth-submit" id="registerBtn">
+          <span class="submit-text">Create Account</span>
+          <span class="submit-loading" style="display:none">
+            <span class="spinner"></span> Creating…
+          </span>
+        </button>
+      </div>
+
+      <p class="auth-switch">
+        Already have an account?
+        <a href="/login">Sign in →</a>
+      </p>
+
+    </div>
+  </div>
+
+  <script src="/static/auth.js"></script>
+  <script>
+    // Password strength meter
+    document.getElementById('password').addEventListener('input', function() {
+      const v = this.value;
+      let score = 0;
+      if(v.length>=6) score++;
+      if(v.length>=10) score++;
+      if(/[A-Z]/.test(v)) score++;
+      if(/[0-9]/.test(v)) score++;
+      if(/[^A-Za-z0-9]/.test(v)) score++;
+      const pct = (score/5)*100;
+      const bar = document.getElementById('pwBar');
+      const lbl = document.getElementById('pwLabel');
+      const cols = ['#ef4444','#f97316','#eab308','#22c55e','#16a34a'];
+      const lbls = ['Very weak','Weak','Fair','Strong','Very strong'];
+      bar.style.width = pct+'%';
+      bar.style.background = v ? (cols[score-1]||'transparent') : 'transparent';
+      lbl.textContent = v ? (lbls[score-1]||'') : '';
+      lbl.style.color = v ? (cols[score-1]||'') : '';
+    });
+
+    // Register
+    document.getElementById('registerBtn').addEventListener('click', handleRegister);
+    document.addEventListener('keydown', e => { if(e.key==='Enter') handleRegister(); });
+
+    async function handleRegister() {
+      const username = document.getElementById('username').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      if (!username||!email||!password) { showAlert('Please fill in all fields.'); return; }
+
+      setBusy(document.getElementById('registerBtn'), true);
+      clearAlert();
+      document.getElementById('authSuccess').style.display='none';
+
+      try {
+        const res  = await fetch('/api/register', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({username,email,password})
+        });
+        const data = await res.json();
+        if(!res.ok){ showAlert(data.error||'Registration failed.'); return; }
+        document.getElementById('authSuccess').style.display='flex';
+        document.getElementById('successMsg').textContent = '✓ Account created! Redirecting to sign in…';
+        setTimeout(()=>{ window.location.href='/login'; }, 1500);
+      } catch(e) {
+        showAlert('Network error. Please try again.');
+      } finally {
+        setBusy(document.getElementById('registerBtn'), false);
+      }
+    }
+  </script>
+</body>
+</html>
