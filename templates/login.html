@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RecruitIQ v2 — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/auth.css"/>
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="bg-glow"></div>
+
+  <!-- Theme toggle -->
+  <button class="theme-btn" id="themeBtn" title="Toggle theme">
+    <span class="th-icon th-sun">☀️</span>
+    <span class="th-icon th-moon">🌙</span>
+  </button>
+
+  <div class="auth-page">
+    <div class="auth-card">
+
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/>
+          </svg>
+        </div>
+        <span>RecruitIQ <em>v2</em></span>
+      </div>
+
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-subtitle">Sign in to your account</p>
+
+      <!-- Alert -->
+      <div class="auth-alert" id="authAlert" style="display:none">
+        <span>⚠</span>
+        <span id="alertMsg"></span>
+      </div>
+
+      <!-- Form -->
+      <div class="auth-form">
+        <div class="field-group">
+          <label class="field-label">Username</label>
+          <input class="field-input" id="username" type="text"
+                 placeholder="Enter your username" autocomplete="username"/>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Password</label>
+          <div class="pw-field">
+            <input class="field-input" id="password" type="password"
+                   placeholder="Enter your password" autocomplete="current-password"/>
+            <button class="pw-toggle" id="pwToggle" type="button">
+              <span class="eye-show">👁</span>
+              <span class="eye-hide" style="display:none">🙈</span>
+            </button>
+          </div>
+        </div>
+
+        <button class="auth-submit" id="loginBtn">
+          <span class="submit-text">Sign In</span>
+          <span class="submit-loading" style="display:none">
+            <span class="spinner"></span> Signing in…
+          </span>
+        </button>
+      </div>
+
+      <p class="auth-switch">
+        Don't have an account?
+        <a href="/register">Create one →</a>
+      </p>
+
+      <div class="demo-box">
+        <strong>Quick Start:</strong> Click "Create one" to register,
+        then come back and sign in.
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/static/auth.js"></script>
+  <script>
+    // Login specific logic
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.addEventListener('keydown', e => { if(e.key==='Enter') handleLogin(); });
+
+    async function handleLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      if (!username || !password) { showAlert('Please fill in all fields.'); return; }
+
+      setBusy(document.getElementById('loginBtn'), true);
+      clearAlert();
+
+      try {
+        const res  = await fetch('/api/login', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({username, password})
+        });
+        const data = await res.json();
+        if (!res.ok) { showAlert(data.error || 'Login failed.'); return; }
+        window.location.href = '/';
+      } catch(e) {
+        showAlert('Network error. Please try again.');
+      } finally {
+        setBusy(document.getElementById('loginBtn'), false);
+      }
+    }
+  </script>
+</body>
+</html>
